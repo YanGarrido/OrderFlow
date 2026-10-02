@@ -5,6 +5,7 @@ import com.orderflow.orderservice.application.port.in.CreateOrderCommand;
 import com.orderflow.orderservice.application.port.in.CreateOrderUseCase;
 import com.orderflow.orderservice.application.port.out.OrderRepository;
 import com.orderflow.orderservice.domain.model.Order;
+import com.orderflow.orderservice.domain.model.OrderItem;
 
 public class CreateOrderService implements CreateOrderUseCase {
     private final OrderRepository orderRepository;
@@ -18,6 +19,14 @@ public class CreateOrderService implements CreateOrderUseCase {
         Objects.requireNonNull(command);
 
         Order order = Order.create(command.customerId());
+
+        command.items().forEach(item -> order.addItem(
+            OrderItem.of(
+                item.productId(),
+                item.quantity(), 
+                item.unitPrice()
+            )
+        ));
 
         return orderRepository.save(order);
     }

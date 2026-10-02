@@ -4,6 +4,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.orderflow.orderservice.application.port.in.CreateOrderCommand;
+import com.orderflow.orderservice.application.port.in.CreateOrderItemCommand;
 import com.orderflow.orderservice.application.port.in.CreateOrderUseCase;
 import com.orderflow.orderservice.domain.model.Order;
 
@@ -51,7 +52,19 @@ public class OrderController {
     })
     @PostMapping
     public ResponseEntity<OrderResponse> create(@Valid @RequestBody CreateOrderRequest request) {
-        Order order = createOrderUseCase.execute(new CreateOrderCommand(request.customerId()));
+        Order order = createOrderUseCase.execute(
+            new CreateOrderCommand(
+                request.customerId(),
+                request.items()
+                    .stream()
+                    .map(item -> new CreateOrderItemCommand(
+                        item.productId(), 
+                        item.quantity(), 
+                        item.unitPrice()
+                    ))
+                    .toList()
+            )
+        );
         
         return ResponseEntity.status(HttpStatus.CREATED).body(OrderResponse.from(order));
     }
