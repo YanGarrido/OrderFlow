@@ -13,6 +13,10 @@ import com.orderflow.orderservice.application.port.in.CreateOrderCommand;
 import com.orderflow.orderservice.application.port.in.CreateOrderUseCase;
 import com.orderflow.orderservice.domain.model.Order;
 import com.orderflow.orderservice.domain.model.OrderStatus;
+import java.math.BigDecimal;
+import java.util.List;
+
+import com.orderflow.orderservice.application.port.in.CreateOrderItemCommand;
 
 @SpringBootTest
 class OrderServiceApplicationTests {
@@ -26,11 +30,23 @@ class OrderServiceApplicationTests {
     }
 
     @Test
-    void shouldCreateOrderThroughSpringContext() {
-        Order order = createOrderUseCase.execute(
-                new CreateOrderCommand(UUID.randomUUID())
-        );
+void shouldCreateOrderThroughSpringContext() {
+    UUID customerId = UUID.randomUUID();
 
-        assertEquals(OrderStatus.CREATED, order.getStatus());
-    }
+    CreateOrderItemCommand item = new CreateOrderItemCommand(
+            UUID.randomUUID(),
+            1,
+            new BigDecimal("25.00")
+    );
+
+    Order order = createOrderUseCase.execute(
+            new CreateOrderCommand(
+                    customerId,
+                    List.of(item)
+            )
+    );
+
+    assertEquals(OrderStatus.CREATED, order.getStatus());
+    assertEquals(new BigDecimal("25.00"), order.total());
+}
 }
