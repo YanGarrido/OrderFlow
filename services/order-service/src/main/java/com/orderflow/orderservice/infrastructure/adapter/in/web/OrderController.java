@@ -7,6 +7,8 @@ import com.orderflow.orderservice.application.port.in.CreateOrderCommand;
 import com.orderflow.orderservice.application.port.in.CreateOrderUseCase;
 import com.orderflow.orderservice.domain.model.Order;
 
+import jakarta.validation.Valid;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -24,7 +26,7 @@ public class OrderController {
     }
 
     @PostMapping
-    public ResponseEntity<OrderResponse> create(@RequestBody CreateOrderRequest request) {
+    public ResponseEntity<OrderResponse> create(@Valid @RequestBody CreateOrderRequest request) {
         Order order = createOrderUseCase.execute(new CreateOrderCommand(request.customerId()));
         
         return ResponseEntity.status(HttpStatus.CREATED).body(OrderResponse.from(order));
