@@ -27,4 +27,24 @@ public class OrderTest {
             NullPointerException.class,
             () -> Order.create(null));
     }
+
+    @Test 
+    void shouldCancelCreatedOrder() {
+        Order order = Order.create(UUID.randomUUID());
+        
+        order.cancel();
+
+        assertEquals(OrderStatus.CANCELLED, order.getStatus());
+    }
+
+    @Test
+    void shouldNotCancelAlreadyCancelledOrder() {
+        Order order = Order.create(UUID.randomUUID());
+        order.cancel();
+
+        assertThrows(
+            IllegalStateException.class,
+            order::cancel
+        );
+    }
 }

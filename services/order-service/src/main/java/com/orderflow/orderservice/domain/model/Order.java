@@ -6,7 +6,7 @@ import java.util.UUID;
 public final class Order {
     private final UUID id;
     private final UUID customerId;
-    private final OrderStatus status;
+    private OrderStatus status;
     
     private Order(UUID id, UUID customerId, OrderStatus status){
         this.id = Objects.requireNonNull(id, "id cannot be null");
@@ -19,6 +19,13 @@ public final class Order {
             UUID.randomUUID(), 
             customerId, 
             OrderStatus.CREATED);
+    }
+
+    public void cancel() {
+        if(status != OrderStatus.CREATED){
+            throw new IllegalStateException("Order cannot be cancelled from status" + status);
+        }
+        this.status = OrderStatus.CANCELLED;
     }
     public UUID getId() {
         return id;
