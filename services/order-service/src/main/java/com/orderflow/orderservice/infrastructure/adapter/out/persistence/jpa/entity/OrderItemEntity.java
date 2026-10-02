@@ -34,4 +34,36 @@ public class OrderItemEntity {
 
     protected OrderItemEntity() {
     }
+
+    public OrderItemEntity(
+        UUID id,
+        UUID productId,
+        Integer quantity,
+        BigDecimal unitPrice
+) {
+    this.id = id;
+    this.productId = productId;
+    this.quantity = quantity;
+    this.unitPrice = unitPrice;
+}
+
+void setOrder(OrderEntity order) {
+    this.order = order;
+}
+
+public UUID getId() {
+    return id;
+}
+
+public UUID getProductId() {
+    return productId;
+}
+
+public Integer getQuantity() {
+    return quantity;
+}
+
+public BigDecimal getUnitPrice() {
+    return unitPrice;
+}
 }

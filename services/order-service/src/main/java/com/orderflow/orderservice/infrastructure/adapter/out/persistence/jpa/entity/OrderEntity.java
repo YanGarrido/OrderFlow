@@ -41,5 +41,35 @@ public class OrderEntity {
 
     protected OrderEntity() {
     }
+    public OrderEntity(
+        UUID id,
+        UUID customerId,
+        OrderStatus status
+) {
+    this.id = id;
+    this.customerId = customerId;
+    this.status = status;
+}
+
+public void addItem(OrderItemEntity item) {
+    items.add(item);
+    item.setOrder(this);
+}
+
+public UUID getId() {
+    return id;
+}
+
+public UUID getCustomerId() {
+    return customerId;
+}
+
+public OrderStatus getStatus() {
+    return status;
+}
+
+public List<OrderItemEntity> getItems() {
+    return List.copyOf(items);
+}
 
 }
