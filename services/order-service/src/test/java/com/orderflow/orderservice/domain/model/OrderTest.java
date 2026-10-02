@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import java.math.BigDecimal;
 import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
@@ -47,4 +48,56 @@ public class OrderTest {
             order::cancel
         );
     }
+
+    @Test
+void shouldAddItemAndCalculateOrderTotal() {
+    Order order = Order.create(UUID.randomUUID());
+
+    OrderItem item = OrderItem.of(
+            UUID.randomUUID(),
+            2,
+            new BigDecimal("19.90")
+    );
+
+    order.addItem(item);
+
+    assertEquals(new BigDecimal("39.80"), order.total());
+    assertEquals(1, order.getItems().size());
+}
+
+@Test
+void shouldNotAddItemToCancelledOrder() {
+    Order order = Order.create(UUID.randomUUID());
+
+    order.cancel();
+
+    OrderItem item = OrderItem.of(
+            UUID.randomUUID(),
+            1,
+            new BigDecimal("10.00")
+    );
+
+    assertThrows(
+            IllegalStateException.class,
+            () -> order.addItem(item)
+    );
+}
+
+@Test
+void shouldNotExposeMutableItemCollection() {
+    Order order = Order.create(UUID.randomUUID());
+
+    order.addItem(
+            OrderItem.of(
+                    UUID.randomUUID(),
+                    1,
+                    new BigDecimal("10.00")
+            )
+    );
+
+    assertThrows(
+            UnsupportedOperationException.class,
+            () -> order.getItems().clear()
+    );
+}
 }
