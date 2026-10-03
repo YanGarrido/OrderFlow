@@ -1,5 +1,6 @@
 package com.orderflow.orderservice.infrastructure.adapter.out.persistence.jpa.mapper;
 
+import java.util.List;
 import java.util.UUID;
 
 import org.springframework.stereotype.Component;
@@ -31,5 +32,23 @@ public class OrderPersistenceMapper {
         }
 
         return entity;
+    }
+
+    public Order toDomain(OrderEntity entity) {
+        List<OrderItem> items = entity.getItems()
+                .stream()
+                .map(item -> OrderItem.of(
+                    item.getProductId(),
+                    item.getQuantity(),
+                    item.getUnitPrice()
+                ))
+                .toList();
+
+        return Order.reconstitute(
+                entity.getId(),
+                entity.getCustomerId(),
+                entity.getStatus(),
+                items
+        );
     }
 }

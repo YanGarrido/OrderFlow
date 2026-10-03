@@ -1,6 +1,8 @@
 package com.orderflow.orderservice.infrastructure.adapter.out.persistence.jpa;
 
 import java.util.Objects;
+import java.util.Optional;
+import java.util.UUID;
 
 import org.springframework.stereotype.Repository;
 
@@ -28,5 +30,10 @@ public class JpaOrderRepositoryAdapter implements OrderRepository {
         repository.save(mapper.toEntity(order));
 
         return order;
+    }
+    @Override 
+    public Optional<Order> findById(UUID id){
+        return repository.findById(id)
+                .map(mapper::toDomain);
     }
 }

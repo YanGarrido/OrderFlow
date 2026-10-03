@@ -2,6 +2,7 @@ package com.orderflow.orderservice.infrastructure.adapter.out.persistence.memory
 
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -18,6 +19,11 @@ public class InMemoryOrderRepository implements OrderRepository {
         orders.put(order.getId(), order);
 
         return order;
+    }
+
+    @Override 
+    public Optional<Order> findById(UUID id) {
+        return Optional.ofNullable(orders.get(id));
     }
     
     
