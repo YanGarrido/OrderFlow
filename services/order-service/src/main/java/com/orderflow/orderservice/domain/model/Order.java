@@ -12,18 +12,29 @@ public final class Order {
     private OrderStatus status;
     private List<OrderItem> items;
     
-    private Order(UUID id, UUID customerId, OrderStatus status){
+    private Order(UUID id, UUID customerId, OrderStatus status, List<OrderItem> items) {
         this.id = Objects.requireNonNull(id, "id cannot be null");
         this.customerId = Objects.requireNonNull(customerId, "customerId cannot be null");
         this.status = Objects.requireNonNull(status, "status cannot be null");
-        this.items = new ArrayList<>();
+        this.items = new ArrayList<>(Objects.requireNonNull(items, "items cannot be null"));
     }
 
     public static Order create(UUID customerId) {
         return new Order(
             UUID.randomUUID(), 
             customerId, 
-            OrderStatus.CREATED);
+            OrderStatus.CREATED,
+            List.of()
+        );
+    }
+
+    public static Order reconstitute(
+        UUID id,
+        UUID customerId,
+        OrderStatus status,
+        List<OrderItem> items
+    ) {
+        return new Order(id, customerId, status, items);
     }
 
     public void cancel() {
