@@ -41,8 +41,13 @@ class OrderControllerTest {
 
 
     private final MockMvc mockMvc = standaloneSetup(
-            new OrderController(createOrderUseCase, findOrderByIdUseCase, cancelOrderUseCase)
-    ).build();
+            new OrderController(
+                createOrderUseCase, 
+                findOrderByIdUseCase, 
+                cancelOrderUseCase)
+    )
+    .setControllerAdvice(new GlobalExceptionHandler())
+    .build();
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -113,19 +118,21 @@ class OrderControllerTest {
 
         verify(findOrderByIdUseCase).execute(orderId);
     }
-
     @Test
-    void shouldReturnNotFoundWhenOrderDoesNotExist() throws Exception {
+    void shouldReturnStructuredNotFoundError() throws Exception {
         UUID orderId = UUID.randomUUID();
 
         when(findOrderByIdUseCase.execute(orderId))
-                .thenReturn(Optional.empty());
+            .thenReturn(Optional.empty());
 
         mockMvc.perform(get("/orders/{id}", orderId))
-                .andExpect(status().isNotFound());
+            .andExpect(status().isNotFound())
+            .andExpect(jsonPath("$.code").value("ORDER_NOT_FOUND"))
+            .andExpect(jsonPath("$.message")
+                    .value("Order not found: " + orderId));
 
         verify(findOrderByIdUseCase).execute(orderId);
-    }
+}
 
     @Test 
     void shouldCancelOrder() throws Exception {
@@ -151,4 +158,45 @@ class OrderControllerTest {
 
         verify(cancelOrderUseCase).execute(orderId);
     }
+    @Test
+        void shouldReturnConflictWhenOrderCannotBeCancelled()
+                throws Exception {
+
+        UUID orderId = UUID.randomUUID();
+
+        when(cancelOrderUseCase.execute(orderId))
+                .thenThrow(new IllegalStateException(
+                        "Order cannot be cancelled from status CANCELLED"
+                ));
+
+        mockMvc.perform(
+                patch("/orders/{id}/cancel", orderId)
+        )
+        .andExpect(status().isConflict())
+        .andExpect(jsonPath("$.code").value("ILLEGAL_STATE"));
+
+        verify(cancelOrderUseCase).execute(orderId);
+     }
+     @Test
+     void shouldReturnBadRequestForInvalidOrderId()
+                throws Exception {
+
+        mockMvc.perform(get("/orders/{id}", "invalid-uuid"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code")
+                        .value("INVALID_PARAMETER"));
+     }
+     @Test
+     void shouldReturnBadRequestForMalformedJson()
+                throws Exception {
+
+        mockMvc.perform(
+                post("/orders")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{invalid-json")
+        )
+        .andExpect(status().isBadRequest())
+        .andExpect(jsonPath("$.code")
+                .value("MALFORMED_JSON"));
+     }
 }

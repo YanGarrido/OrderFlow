@@ -3,6 +3,7 @@ package com.orderflow.orderservice.infrastructure.adapter.in.web;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.orderflow.orderservice.application.exception.OrderNotFoundException;
 import com.orderflow.orderservice.application.port.in.CancelOrderUseCase;
 import com.orderflow.orderservice.application.port.in.CreateOrderCommand;
 import com.orderflow.orderservice.application.port.in.CreateOrderItemCommand;
@@ -102,12 +103,10 @@ public class OrderController {
     })
     @GetMapping("/{id}")
     public ResponseEntity<OrderResponse> findById(@PathVariable UUID id) {
-        var order = findOrderByIdUseCase.execute(id);
+        Order order = findOrderByIdUseCase.execute(id)
+                .orElseThrow(() -> new OrderNotFoundException(id));
 
-        if (order.isEmpty()) {
-            return ResponseEntity.notFound().build();
-        }
-        return ResponseEntity.ok(OrderResponse.from(order.get()));
+        return ResponseEntity.ok(OrderResponse.from(order));
     }
 
     @Operation (
