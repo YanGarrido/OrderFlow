@@ -3,6 +3,8 @@ package com.orderflow.orderservice.application.service;
 import java.util.Objects;
 import java.util.UUID;
 
+import org.springframework.transaction.annotation.Transactional;
+
 import com.orderflow.orderservice.application.exception.OrderNotFoundException;
 import com.orderflow.orderservice.application.port.in.CancelOrderUseCase;
 import com.orderflow.orderservice.application.port.out.OrderRepository;
@@ -14,7 +16,7 @@ public class CancelOrderService implements CancelOrderUseCase {
     public CancelOrderService(OrderRepository orderRepository) {
         this.orderRepository = orderRepository;
     }
-
+    @Transactional 
     @Override 
     public Order execute(UUID orderId) {
         Objects.requireNonNull(orderId, "orderId cannot be null");
