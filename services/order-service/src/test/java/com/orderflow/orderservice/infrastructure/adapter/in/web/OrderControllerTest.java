@@ -5,12 +5,14 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.setup.MockMvcBuilders.standaloneSetup;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
@@ -20,16 +22,21 @@ import org.springframework.test.web.servlet.MockMvc;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.orderflow.orderservice.application.port.in.CreateOrderCommand;
 import com.orderflow.orderservice.application.port.in.CreateOrderUseCase;
+import com.orderflow.orderservice.application.port.in.FindOrderByIdUseCase;
 import com.orderflow.orderservice.domain.model.Order;
 import com.orderflow.orderservice.domain.model.OrderItem;
 
 class OrderControllerTest {
 
+    private final FindOrderByIdUseCase findOrderByIdUseCase =
+            mock(FindOrderByIdUseCase.class);
+
     private final CreateOrderUseCase createOrderUseCase =
             mock(CreateOrderUseCase.class);
 
+
     private final MockMvc mockMvc = standaloneSetup(
-            new OrderController(createOrderUseCase)
+            new OrderController(createOrderUseCase, findOrderByIdUseCase)
     ).build();
 
     private final ObjectMapper objectMapper = new ObjectMapper();
@@ -77,5 +84,41 @@ class OrderControllerTest {
 
         verify(createOrderUseCase)
                 .execute(any(CreateOrderCommand.class));
+    }
+
+    @Test
+    void shouldFindOrderById() throws Exception {
+        UUID orderId = UUID.randomUUID();
+        UUID customerId = UUID.randomUUID();
+        Order order = Order.reconstitute(
+                orderId,
+                customerId,
+                com.orderflow.orderservice.domain.model.OrderStatus.CREATED,
+                List.of()
+        );
+
+        when(findOrderByIdUseCase.execute(orderId))
+                .thenReturn(Optional.of(order));
+
+        mockMvc.perform(get("/orders/{id}", orderId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(orderId.toString()))
+                .andExpect(jsonPath("$.customerId").value(customerId.toString()))
+                .andExpect(jsonPath("$.status").value("CREATED"));
+
+        verify(findOrderByIdUseCase).execute(orderId);
+    }
+
+    @Test
+    void shouldReturnNotFoundWhenOrderDoesNotExist() throws Exception {
+        UUID orderId = UUID.randomUUID();
+
+        when(findOrderByIdUseCase.execute(orderId))
+                .thenReturn(Optional.empty());
+
+        mockMvc.perform(get("/orders/{id}", orderId))
+                .andExpect(status().isNotFound());
+
+        verify(findOrderByIdUseCase).execute(orderId);
     }
 }

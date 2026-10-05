@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.orderflow.orderservice.application.port.in.CreateOrderCommand;
 import com.orderflow.orderservice.application.port.in.CreateOrderItemCommand;
 import com.orderflow.orderservice.application.port.in.CreateOrderUseCase;
+import com.orderflow.orderservice.application.port.in.FindOrderByIdUseCase;
 import com.orderflow.orderservice.domain.model.Order;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -14,10 +15,16 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 
+import java.util.UUID;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestParam;
+
 
 @Tag (
     name = "Orders",
@@ -28,9 +35,11 @@ import org.springframework.web.bind.annotation.RequestBody;
 public class OrderController {
 
     private final CreateOrderUseCase createOrderUseCase;
+    private final FindOrderByIdUseCase findOrderByIdUseCase;
 
-    public OrderController(CreateOrderUseCase createOrderUseCase) {
+    public OrderController(CreateOrderUseCase createOrderUseCase, FindOrderByIdUseCase findOrderByIdUseCase) {
         this.createOrderUseCase = createOrderUseCase;
+        this.findOrderByIdUseCase = findOrderByIdUseCase;
     }
     @Operation (
         summary = "Cria um pedido",
@@ -68,6 +77,35 @@ public class OrderController {
         
         return ResponseEntity.status(HttpStatus.CREATED).body(OrderResponse.from(order));
     }
+
+    @Operation (
+        summary = "Busca um pedido",
+        description = "Busca um pedido pelo seu identificador"
+    )
+    @ApiResponses({
+        @ApiResponse(
+                responseCode = "200",
+                description = "Pedido encontrado"
+        ),
+        @ApiResponse (
+                responseCode = "400",
+                description = "Identificador inválido"
+        ),
+        @ApiResponse(
+                responseCode = "404",
+                description = "Pedido não encontrado"
+        )
+    })
+    @GetMapping("/{id}")
+    public ResponseEntity<OrderResponse> findById(@PathVariable UUID id) {
+        var order = findOrderByIdUseCase.execute(id);
+
+        if (order.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(OrderResponse.from(order.get()));
+    }
+    
     
     
 }
