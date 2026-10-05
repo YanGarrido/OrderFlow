@@ -6,10 +6,12 @@ import org.springframework.context.annotation.Configuration;
 import com.orderflow.orderservice.application.port.in.CancelOrderUseCase;
 import com.orderflow.orderservice.application.port.in.CreateOrderUseCase;
 import com.orderflow.orderservice.application.port.in.FindOrderByIdUseCase;
+import com.orderflow.orderservice.application.port.in.FindOrdersUseCase;
 import com.orderflow.orderservice.application.port.out.OrderRepository;
 import com.orderflow.orderservice.application.service.CancelOrderService;
 import com.orderflow.orderservice.application.service.CreateOrderService;
 import com.orderflow.orderservice.application.service.FindOrderByIdService;
+import com.orderflow.orderservice.application.service.FindOrdersService;
 
 @Configuration
 public class OrderServiceConfiguration {
@@ -29,6 +31,10 @@ public class OrderServiceConfiguration {
         return new CancelOrderService(orderRepository);
     }
 
+    @Bean 
+    public FindOrdersUseCase findOrderUseCase(OrderRepository orderRepository) {
+        return new FindOrdersService(orderRepository);
+    }
     
 
 }
