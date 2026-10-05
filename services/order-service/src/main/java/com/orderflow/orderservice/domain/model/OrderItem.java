@@ -4,7 +4,7 @@ import java.math.BigDecimal;
 import java.util.Objects;
 import java.util.UUID;
 
-public class OrderItem {
+public final class OrderItem {
     private final UUID productId;
     private final int quantity;
     private final BigDecimal unitPrice;

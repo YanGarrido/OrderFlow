@@ -10,7 +10,7 @@ public final class Order {
     private final UUID id;
     private final UUID customerId;
     private OrderStatus status;
-    private List<OrderItem> items;
+    private final List<OrderItem> items;
     
     private Order(UUID id, UUID customerId, OrderStatus status, List<OrderItem> items) {
         this.id = Objects.requireNonNull(id, "id cannot be null");
@@ -39,7 +39,7 @@ public final class Order {
 
     public void cancel() {
         if(status != OrderStatus.CREATED){
-            throw new IllegalStateException("Order cannot be cancelled from status" + status);
+            throw new IllegalStateException("Order cannot be cancelled from status " + status);
         }
         this.status = OrderStatus.CANCELLED;
     }
