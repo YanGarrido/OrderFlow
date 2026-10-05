@@ -8,6 +8,8 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
+import com.orderflow.orderservice.application.exception.OrderNotFoundException;
+
 @RestControllerAdvice 
 public class GlobalExceptionHandler {
     
@@ -51,5 +53,12 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .status(HttpStatus.CONFLICT)
                 .body(new ErrorResponse("ILLEGAL_STATE", exception.getMessage()));
+    }
+
+    @ExceptionHandler (OrderNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleOrderNotFound(OrderNotFoundException exception){
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(new ErrorResponse("ORDER_NOT_FOUND", exception.getMessage()));
     }
 }

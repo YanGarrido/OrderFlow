@@ -3,6 +3,7 @@ package com.orderflow.orderservice.infrastructure.adapter.in.web;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.orderflow.orderservice.application.port.in.CancelOrderUseCase;
 import com.orderflow.orderservice.application.port.in.CreateOrderCommand;
 import com.orderflow.orderservice.application.port.in.CreateOrderItemCommand;
 import com.orderflow.orderservice.application.port.in.CreateOrderUseCase;
@@ -22,6 +23,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 
@@ -36,10 +38,12 @@ public class OrderController {
 
     private final CreateOrderUseCase createOrderUseCase;
     private final FindOrderByIdUseCase findOrderByIdUseCase;
+    private final CancelOrderUseCase cancelOrderUseCase;
 
-    public OrderController(CreateOrderUseCase createOrderUseCase, FindOrderByIdUseCase findOrderByIdUseCase) {
+    public OrderController(CreateOrderUseCase createOrderUseCase, FindOrderByIdUseCase findOrderByIdUseCase, CancelOrderUseCase cancelOrderUseCase) {
         this.createOrderUseCase = createOrderUseCase;
         this.findOrderByIdUseCase = findOrderByIdUseCase;
+        this.cancelOrderUseCase = cancelOrderUseCase;
     }
     @Operation (
         summary = "Cria um pedido",
@@ -104,6 +108,30 @@ public class OrderController {
             return ResponseEntity.notFound().build();
         }
         return ResponseEntity.ok(OrderResponse.from(order.get()));
+    }
+
+    @Operation (
+        summary = "Cancela um pedido",
+        description = "Cancela um pedido que esteja no estado CREATED"
+    )
+    @ApiResponses ({
+        @ApiResponse (
+            responseCode = "200",
+            description = "Pedido cancelado"
+        ),
+        @ApiResponse (
+            responseCode = "404",
+            description = "Pedido não encontrado"
+        ),
+        @ApiResponse (
+            responseCode = "409",
+            description = "Pedido não pode ser cancelado"
+        )
+    })
+    @PatchMapping("/{id}/cancel")
+    public ResponseEntity<OrderResponse> cancel(@PathVariable UUID id) {
+       Order order = cancelOrderUseCase.execute(id);
+       return ResponseEntity.ok(OrderResponse.from(order));
     }
     
     

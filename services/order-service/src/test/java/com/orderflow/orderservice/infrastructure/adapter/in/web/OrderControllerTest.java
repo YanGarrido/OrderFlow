@@ -6,6 +6,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.setup.MockMvcBuilders.standaloneSetup;
@@ -20,6 +21,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.orderflow.orderservice.application.port.in.CancelOrderUseCase;
 import com.orderflow.orderservice.application.port.in.CreateOrderCommand;
 import com.orderflow.orderservice.application.port.in.CreateOrderUseCase;
 import com.orderflow.orderservice.application.port.in.FindOrderByIdUseCase;
@@ -34,9 +36,12 @@ class OrderControllerTest {
     private final CreateOrderUseCase createOrderUseCase =
             mock(CreateOrderUseCase.class);
 
+    private final CancelOrderUseCase cancelOrderUseCase =
+            mock(CancelOrderUseCase.class);
+
 
     private final MockMvc mockMvc = standaloneSetup(
-            new OrderController(createOrderUseCase, findOrderByIdUseCase)
+            new OrderController(createOrderUseCase, findOrderByIdUseCase, cancelOrderUseCase)
     ).build();
 
     private final ObjectMapper objectMapper = new ObjectMapper();
@@ -120,5 +125,30 @@ class OrderControllerTest {
                 .andExpect(status().isNotFound());
 
         verify(findOrderByIdUseCase).execute(orderId);
+    }
+
+    @Test 
+    void shouldCancelOrder() throws Exception {
+       UUID orderId = UUID.randomUUID();
+       UUID customerId = UUID.randomUUID();
+
+       Order order = Order.reconstitute(
+            orderId,
+            customerId,
+            com.orderflow.orderservice.domain.model.OrderStatus.CANCELLED,
+            List.of()
+       );
+
+       when(cancelOrderUseCase.execute(orderId))
+            .thenReturn(order);
+
+        mockMvc.perform(
+            patch("/orders/{id}/cancel", orderId)
+        )
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.id").value(orderId.toString()))
+        .andExpect(jsonPath("$.status").value("CANCELLED"));
+
+        verify(cancelOrderUseCase).execute(orderId);
     }
 }
