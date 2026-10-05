@@ -14,6 +14,7 @@ import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
+import com.orderflow.orderservice.application.port.in.CancelOrderUseCase;
 import com.orderflow.orderservice.application.port.in.CreateOrderCommand;
 import com.orderflow.orderservice.application.port.in.CreateOrderUseCase;
 import com.orderflow.orderservice.application.port.in.FindOrderByIdUseCase;
@@ -37,6 +38,9 @@ class OrderServiceApplicationTests {
 
     @Autowired 
     private FindOrderByIdUseCase findOrderByIdUseCase;
+
+    @Autowired
+    private CancelOrderUseCase cancelOrderUseCase;
 
     @Test
     void contextLoads() {
@@ -88,5 +92,49 @@ class OrderServiceApplicationTests {
         assertEquals(1, foundOrder.get().getItems().size());
 
     }
+    @Test
+void shouldPersistCancelledOrder() {
+    UUID customerId = UUID.randomUUID();
+
+    CreateOrderItemCommand item = new CreateOrderItemCommand(
+            UUID.randomUUID(),
+            1,
+            new BigDecimal("25.00")
+    );
+
+    Order createdOrder = createOrderUseCase.execute(
+            new CreateOrderCommand(
+                    customerId,
+                    List.of(item)
+            )
+    );
+
+    assertEquals(
+            OrderStatus.CREATED,
+            createdOrder.getStatus()
+    );
+
+    Order cancelledOrder = cancelOrderUseCase.execute(
+            createdOrder.getId()
+    );
+
+    assertEquals(
+            OrderStatus.CANCELLED,
+            cancelledOrder.getStatus()
+    );
+
+    Optional<Order> foundOrder =
+            findOrderByIdUseCase.execute(createdOrder.getId());
+
+    assertTrue(foundOrder.isPresent());
+    assertEquals(
+            OrderStatus.CANCELLED,
+            foundOrder.get().getStatus()
+    );
+    assertEquals(
+            new BigDecimal("25.00"),
+            foundOrder.get().total()
+    );
+}
 
 }
